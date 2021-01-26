@@ -45,5 +45,5 @@ class Vehicle:
                                                        )
 
     def set_autopilot(self, value):
-        self.entity.set_autopilot = value
+        self.entity.set_autopilot(value)
         pass
