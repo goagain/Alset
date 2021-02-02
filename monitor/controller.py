@@ -8,7 +8,7 @@ class Controller:
         self.client = carla.Client("localhost", 2000)
         self.client.set_timeout(10.0)
 
-        self.world = self.client.load_world('Town02')
+        self.world = self.client.load_world('Town01')
 
         self.vehicle_blueprints = {}
         self.vehicles = []
@@ -22,7 +22,7 @@ class Controller:
         return vehicle
 
     def get_vehicle_blueprints(self) -> list:
-        if vehicle_blueprints:
-            for blueprint in blueprints.filter('vehicle'):
+        if self.vehicle_blueprints:
+            for blueprint in self.blueprints.filter('vehicle'):
                 self.vehicle_blueprints[blueprint.id] = blueprint
         return self.vehicle_blueprints
