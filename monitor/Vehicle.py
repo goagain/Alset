@@ -1,24 +1,40 @@
+from KeyboardInput import KeyboardInput
 import carla
 import numpy as np
 import numpy.linalg
+from PyQt5.QtWidgets import *
+from PyQt5.uic import loadUi
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtCore import QObject, QEvent, pyqtSignal, pyqtSlot, QTimer
+from Ticker import Tickable
+from logger import log
 
 
-class Vehicle:
-    def __init__(self,
-                 controller,
-                 vehicle_id,
-                 auto_pilot=True,
-                 dashcam=True,
-                 third_camera=True,
-                 radar=True,
-                 lane_invasion_detector=True,
-                 obstacle_detector=True,
-                 color=None):
-        self.controller = controller
-        self.world = self.controller.world
-        self.blueprint = self.controller.world.get_blueprint_library().find(
-            vehicle_id)
+class Vehicle(Tickable):
+    MODE_MANUAL = 0,
+    MODE_ASSISTANT = 1,
+    MODE_AUTOMATIC = 2,
 
+    def __init__(
+        self,
+        world_controller,
+        vehicle_id,
+        mode=MODE_AUTOMATIC,
+        dashcam=True,
+        third_camera=True,
+        radar=True,
+        lane_invasion_detector=True,
+        obstacle_detector=True,
+        color=None,
+    ):
+        super().__init__()
+        self.world_controller = world_controller
+        self.world = self.world_controller.world
+
+        self.vehicle_controller = None
+
+        self.blueprint = self.world_controller.world.get_blueprint_library(
+        ).find(vehicle_id)
         self.monitors = {}
 
         recommend_spawn_points = self.world.get_map().get_spawn_points()
@@ -33,8 +49,7 @@ class Vehicle:
 
         self.entity = self.world.spawn_actor(self.blueprint,
                                              vehicle_spawn_point)
-
-        self.set_autopilot(auto_pilot)
+        self.mode = mode
 
         self.dash_camera = None
         if dashcam:
@@ -63,9 +78,20 @@ class Vehicle:
                 radar_bp, carla.Transform(carla.Location(z=1)), self.entity,
                 carla.AttachmentType.Rigid)
 
-    def set_autopilot(self, value):
-        self.entity.set_autopilot(value)
-        pass
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, value):
+        self._mode = value
+        if value == Vehicle.MODE_MANUAL:
+            self.entity.set_autopilot(False)
+        elif value == Vehicle.MODE_ASSISTANT:
+            self.entity.set_autopilot(True)
+        elif value == Vehicle.MODE_AUTOMATIC:
+            self.entity.set_autopilot(True)
+
 
     def init_dashcam(self):
         camera_bp = self.world.get_blueprint_library().find(
@@ -116,7 +142,7 @@ class Vehicle:
 
     def on_third_cam(self, image):
         self.monitors['third_cam'] = image
-    
+
     def on_obstacle_detector(self, event):
         # print(event, f"distance={event.distance} m")
         self.monitors['od'] = event
@@ -127,6 +153,7 @@ class Vehicle:
             if clear:
                 self.monitors['od'] = None
             return ret
+
     @property
     def dash_cam_image(self):
         if 'dash_cam' in self.monitors:
@@ -136,3 +163,8 @@ class Vehicle:
     def third_cam_image(self):
         if 'third_cam' in self.monitors:
             return self.monitors['third_cam']
+
+    def on_tick(self):
+        if self.mode == Vehicle.MODE_MANUAL:
+            # print(KeyboardInput.controll)
+            self.entity.apply_control(KeyboardInput.controll)

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1224</width>
-    <height>679</height>
+    <width>1307</width>
+    <height>911</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,16 +17,6 @@
    <layout class="QHBoxLayout" name="horizontalLayout_2">
     <item>
      <layout class="QGridLayout" name="graphics">
-      <item row="1" column="0">
-       <widget class="QLabel" name="dash_cam">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="text">
-         <string>dash_cam</string>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="1">
        <widget class="QLabel" name="third_cam">
         <property name="text">
@@ -45,6 +35,16 @@
        <widget class="QLabel" name="unused">
         <property name="text">
          <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="dash_cam">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>dash_cam</string>
         </property>
        </widget>
       </item>
@@ -67,9 +67,67 @@
        </widget>
       </item>
       <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Select Mode</string>
+        </property>
+        <widget class="QRadioButton" name="manualControlButton">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>195</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Manual Mode</string>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="assistantModeButton">
+         <property name="geometry">
+          <rect>
+           <x>211</x>
+           <y>30</y>
+           <width>194</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Adaptive Assistant Mode</string>
+         </property>
+        </widget>
+        <widget class="QRadioButton" name="autoModeButton">
+         <property name="geometry">
+          <rect>
+           <x>411</x>
+           <y>30</y>
+           <width>195</width>
+           <height>17</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>Automatic Mode</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="label_info">
         <property name="text">
          <string>TextLabel</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="margin">
+         <number>5</number>
+        </property>
+        <property name="indent">
+         <number>5</number>
         </property>
        </widget>
       </item>
@@ -77,6 +135,13 @@
        <widget class="QLabel" name="label_log">
         <property name="text">
          <string>TextLabel</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnRecord">
+        <property name="text">
+         <string>Record</string>
         </property>
        </widget>
       </item>
@@ -89,7 +154,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1224</width>
+     <width>1307</width>
      <height>21</height>
     </rect>
    </property>
