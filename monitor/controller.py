@@ -10,7 +10,7 @@ class Controller:
         self.client = carla.Client("localhost", 2000)
         self.client.set_timeout(10.0)
 
-        self.world = self.client.load_world('Town01')
+        self.world = self.client.load_world('Town02')
 
         self.vehicle_blueprints = {}
         self.vehicles = []

@@ -8,7 +8,7 @@ from KeyboardInput import KeyboardInput
 import weakref
 from logger import log
 import Ticker
-
+import yolo_detector
 
 class MainApplication(QMainWindow):
     signal = pyqtSignal(object, QLabel)
@@ -21,6 +21,8 @@ class MainApplication(QMainWindow):
         # self.scene = QGraphicsScene(self)
         Ticker.TickerManager.init(self)
         self.keyboard_input = KeyboardInput(self)
+        self.yolo_detector = yolo_detector.yolo_detector()
+
     def initUI(self):
         self.spawnVehicle.clicked.connect(self.on_click_spawn)
         self.spawnVehicle.installEventFilter(self)
@@ -74,6 +76,13 @@ class MainApplication(QMainWindow):
         label.setPixmap(pixmap)
 
         # self.renderSignal.emit(scene)
+    @pyqtSlot(object, QLabel)
+    def on_render_detect(self, img_np, width, height, label):
+        qimage = QImage(img_np, img_np.shape[1], img_np.shape[0],                                                                                                                                                 
+                        QImage.Format_RGB888)                                                                                                                                                                 
+        pixmap = QPixmap(qimage)                                                                                                                                                                               
+        pixmap = pixmap.scaled(width,height, Qt.IgnoreAspectRatio)                                                                                                                                                    
+        label.setPixmap(pixmap)
 
     def on_tick(self):
         self.keyboard_input.on_tick()
@@ -100,6 +109,8 @@ class MainApplication(QMainWindow):
         info.append(f'Speed: {self.vehicle.speed * 3.6 :.1f} km/h')
         if self.vehicle.dash_cam_image:
             self.on_render(self.vehicle.dash_cam_image, self.dash_cam)
+            detect_img = self.yolo_detector.detect(self.vehicle.dash_cam_image)
+            self.on_render_detect(detect_img, self.vehicle.dash_cam_image.width, self.vehicle.dash_cam_image.height, self.radar)
         if self.vehicle.third_cam_image:
             self.on_render(self.vehicle.third_cam_image, self.third_cam)
         if self.vehicle.obstacle_detector:
