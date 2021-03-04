@@ -3,7 +3,11 @@ import numpy as np
 
 def detectColor(image): # receives an ROI containing a single light
     # convert BGR image to HSV
-    hsv_img = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+    try:
+        hsv_img = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+    except Exception as e:
+        print(e)
+        return 0
 
     # min and max HSV values
     red_min = np.array([0,5,150])
@@ -18,13 +22,12 @@ def detectColor(image): # receives an ROI containing a single light
     green_max = np.array([90,255,255])
 
     # apply red, yellow, green thresh to image
-    # 利用cv2.inRange函数设阈值，去除背景部分
+    # using cv2.inRange to set range，erase the background
     red_thresh = cv2.inRange(hsv_img,red_min,red_max)+cv2.inRange(hsv_img,red_min2,red_max2)
     yellow_thresh = cv2.inRange(hsv_img,yellow_min,yellow_max)
     green_thresh = cv2.inRange(hsv_img,green_min,green_max)
 
     # apply blur to fix noise in thresh
-    # 进行中值滤波
     red_blur = cv2.medianBlur(red_thresh,5)
     yellow_blur = cv2.medianBlur(yellow_thresh,5)
     green_blur = cv2.medianBlur(green_thresh,5)
