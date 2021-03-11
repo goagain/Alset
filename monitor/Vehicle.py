@@ -82,6 +82,7 @@ class Vehicle(Tickable):
             self.lane_invasion_detector = self.world.spawn_actor(
                 li_bp, carla.Transform(carla.Location(z=1)), self.entity,
                 carla.AttachmentType.Rigid)
+            self.lane_invasion_detector.listen(self.on_line_invasion)
 
         self.radar = None
         if radar:
@@ -196,6 +197,11 @@ class Vehicle(Tickable):
             cc = carla.ColorConverter.Raw
             save_image_data(f'{self.third_cam_dir}/{image.frame:06d}.png',image, cc)
 
+    def on_line_invasion(self, event):
+        """On invasion method"""
+        self.monitors['line_invasion'] = event
+        
+
     def on_obstacle_detector(self, event):
         # print(event, f"distance={event.distance} m")
         self.monitors['od'] = event
@@ -219,6 +225,12 @@ class Vehicle(Tickable):
             ret = self.monitors['od']
             if clear:
                 self.monitors['od'] = None
+            return ret
+    def get_line_invasion_data(self, clear):
+        if 'line_invasion' in self.monitors:
+            ret = self.monitors['line_invasion']
+            if clear:
+                self.monitors['line_invasion'] = None
             return ret
 
     @property

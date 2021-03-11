@@ -140,6 +140,7 @@ class MainApplication(QMainWindow):
             detect_img1,bchange, speed = self.speedsign_detector.detect(self.vehicle.dash_cam_image)
             if( bchange):
                 self.curlimitspeed = speed
+
             try:
                 #detect_img = lane_detector.process_lane_detect(self.vehicle.dash_cam_image)
                 detect_img = self.lane_detector.detect_lines(self.vehicle.dash_cam_image)
@@ -157,8 +158,13 @@ class MainApplication(QMainWindow):
                 info.append(
                     f'actor = {od_data.other_actor.id}, distance = {od_data.distance:.2f} m'
                 )
-
-     
+        if self.vehicle.lane_invasion_detector:
+            line_invasion_data = self.vehicle.get_line_invasion_data(clear=True)
+            if line_invasion_data:
+                lane_types = set(x.type for x in line_invasion_data.crossed_lane_markings)
+                text = ['%r' % str(x).split()[-1] for x in lane_types]
+                info.append(f'Crossed line: {text}')
+            
         info.append(f'Speed: {self.vehicle.speed * 3.6 :.1f} km/h')
         info.append(f'Speed Limit: {self.curlimitspeed} km/h')
         self.label_info.setText('\n'.join(info))
