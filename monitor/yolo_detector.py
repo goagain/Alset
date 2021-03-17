@@ -11,8 +11,7 @@ from utils.general import check_img_size, check_requirements, non_max_suppressio
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 import TLState
-import detectColor  
-
+import detectColor
 class yolo_detector:
     def __init__(self, img_size=640, stride=32, debug = 0):
         path = 'foo'
@@ -31,7 +30,6 @@ class yolo_detector:
 
         # Get names and colors
         names = model.module.names if hasattr(model, 'module') else model.names
-        print(names)
         colors = [[random.randint(0, 255) for _ in range(3)] for _ in names]
         # Run inference
         if device.type != 'cpu':
@@ -45,7 +43,7 @@ class yolo_detector:
         self.colors = colors
         self.stride = stride
         self.debug = debug
-        cv2.namedWindow('detect', cv2.WINDOW_NORMAL)
+        #cv2.namedWindow('detect', cv2.WINDOW_NORMAL)
 
     def detect(self, image, frame=12345):
         if self.debug>0:
@@ -57,11 +55,10 @@ class yolo_detector:
         opt_agnostic_nms = False
         opt_classes = None
         opt_iou_thres = 0.45
-        opt_conf_thres = 0.25
+        opt_conf_thres = 0.60
         opt_save_conf = False
         newimg_np = letterbox(img_np, self.img_sz, stride=self.stride)[0]
-        bgr_image = cv2.cvtColor(newimg_np, cv2.COLOR_RGB2BGR)
-        im0s = bgr_image
+        im0s = newimg_np  #cv2.cvtColor(newimg_np, cv2.COLOR_RGB2BGR)
         if self.debug>0:
             print(f'im0s shape:',im0s.shape)
         img = im0s[:, :, ::-1].transpose(2, 0, 1)  # BGR to RGB, to 3x416x416
@@ -104,26 +101,22 @@ class yolo_detector:
                     line = (cls, *xywh, conf) if opt_save_conf else (cls, *xywh)  # label format
                     if self.debug>0:
                         print('line:',line)
+                    clsname = self.names[int(cls)]
 
-                    label = f'{self.names[int(cls)]} {conf:.2f}'
+                    label = f'{clsname} {conf:.2f}'
                     if self.debug>0:
                         print('label:',label)
-                    if label.find('traffic light')>=0:
+
+                    #detect the light color
+                    if clsname.find('traffic light')>=0:
                         traffic_img = newimg_np[int(xyxy[1]):int(xyxy[3]),int(xyxy[0]):int(xyxy[2]),:]
-                        # print('original size:',newimg_np.shape)
-                        # print('box data:',xyxy)
-                        # print('traffic_img shape:',traffic_img.shape)
-                        cv2.imshow('detect', traffic_img)
-                        cv2.waitKey(1) # 1 millisecond
                         if traffic_img.shape[0]>0:
                             state = TLState.detectState(traffic_img,TLState.TLType.regular.value)
-                            label_new = label
                             if state>0:
-                                label_new = TLState.TLState(state).name
-                            # else:
-                            #     label_new = 'unknown'
-                            label = label + " - " + label_new
-                    plot_one_box(xyxy, newimg_np, color=tuple(self.colors[int(cls)]), label=label, line_thickness=1)
+                                label = label + " - " + TLState.TLState(state).name
+                   
+                    if clsname in ['traffic light','person','car','bicycle','bus','truck']:
+                        plot_one_box(xyxy, newimg_np, color=tuple(self.colors[int(cls)]), label=label, line_thickness=1)
 
             # Print time (inference + NMS)
             if self.debug>0:
