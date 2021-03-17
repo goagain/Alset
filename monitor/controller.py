@@ -9,10 +9,11 @@ from carla import VehicleLightState as vls
 class Controller:
     globalController = None
 
-    def __init__(self):
+    def __init__(self, uiroot):
         self.client = None
         self.world = None
 
+        self.uiroot = uiroot
         self.vehicle_blueprints = []
         self.current_vehicle = None
         self.npc_list = []
@@ -27,9 +28,6 @@ class Controller:
 
     def set_map(self, map_name):
         self.world = self.client.load_world(map_name)
-
-
-
 
     def spawn_vehicle(self, car_name, car_mode) -> Vehicle.Vehicle:
         self.current_vehicle = Vehicle.Vehicle(self, car_name, mode=car_mode)
@@ -180,6 +178,7 @@ class Controller:
             traffic_manager.global_percentage_speed_difference(30.0)
         finally:
             pass
+
     def get_vehicle_blueprints(self) -> list:
         if not self.vehicle_blueprints:
             for blueprint in self.world.get_blueprint_library().filter('vehicle.*'):

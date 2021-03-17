@@ -21,10 +21,11 @@ class MainApplication(QMainWindow):
         super(MainApplication, self).__init__(parent)
         loadUi("./res/UI/MainApplication.ui", self)
         self.initUI()
-        self.controller = Controller()
+        self.controller = Controller(self)
         # self.scene = QGraphicsScene(self)
         Ticker.TickerManager.init(self)
-        self.keyboard_input = KeyboardInput(self)
+        
+        
 
     def initUI(self):
         self.spawnVehicle.clicked.connect(self.on_click_spawn)
@@ -125,7 +126,8 @@ class MainApplication(QMainWindow):
         label.setPixmap(pixmap)
 
     def on_tick(self):
-        self.keyboard_input.on_tick()
+        if self.vehicle:
+            self.vehicle.speed_limit = self.speedLimit.value()
 
     @log
     def onSelectAssistantMode(self, toggled):
@@ -179,7 +181,9 @@ class MainApplication(QMainWindow):
                 lane_types = set(x.type for x in line_invasion_data.crossed_lane_markings)
                 text = ['%r' % str(x).split()[-1] for x in lane_types]
                 info.append(f'Crossed line: {text}')
-            
+        
+        self.speedText.setText(str(int(self.vehicle.speed * 3.6)))
+
         info.append(f'Speed: {self.vehicle.speed * 3.6 :.1f} km/h')
         info.append(f'Speed Limit: {self.curlimitspeed} km/h')
         self.label_info.setText('\n'.join(info))

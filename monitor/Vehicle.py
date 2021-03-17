@@ -9,8 +9,10 @@ from PyQt5.QtCore import QObject, QEvent, pyqtSignal, pyqtSlot, QTimer
 from Ticker import Tickable
 from logger import log
 from dataexport import *
+import MainApplication
 
 OUTPUT_FOLDER = '_out'
+
 
 def maybe_create_dir(directory):
     if not os.path.exists(directory):
@@ -38,8 +40,8 @@ class Vehicle(Tickable):
 
         # collect data or not, default is False
         self.b_savedata = False
-        if( self.b_savedata ):
-           self.init_data_dir(OUTPUT_FOLDER)
+        if (self.b_savedata):
+            self.init_data_dir(OUTPUT_FOLDER)
 
         self.world_controller = world_controller
         self.world = self.world_controller.world
@@ -58,9 +60,8 @@ class Vehicle(Tickable):
         self.blueprint.set_attribute('color', color)
 
         bscussed = self.spawn_car()
-        while( bscussed == False ):
+        while (bscussed == False):
             bscussed = self.spawn_car()
-
 
         self.mode = mode
 
@@ -92,6 +93,9 @@ class Vehicle(Tickable):
                 radar_bp, carla.Transform(carla.Location(z=1)), self.entity,
                 carla.AttachmentType.Rigid)
 
+        self.input_controller = KeyboardInput(self.world_controller.uiroot)
+        self.speed_limit = 0
+
     @property
     def mode(self):
         return self._mode
@@ -102,7 +106,7 @@ class Vehicle(Tickable):
         if value == Vehicle.MODE_MANUAL:
             self.entity.set_autopilot(False)
         elif value == Vehicle.MODE_ASSISTANT:
-            self.entity.set_autopilot(True)
+            self.entity.set_autopilot(False)
         elif value == Vehicle.MODE_AUTOMATIC:
             self.entity.set_autopilot(True)
 
@@ -112,7 +116,7 @@ class Vehicle(Tickable):
 
         try:
             self.entity = self.world.spawn_actor(self.blueprint,
-                                             vehicle_spawn_point)
+                                                 vehicle_spawn_point)
         except Exception as e:
             return False
 
@@ -157,10 +161,11 @@ class Vehicle(Tickable):
             carla.AttachmentType.Rigid)
         self.obstacle_detector.listen(self.on_obstacle_detector)
 
-    def init_data_dir(self,dirpath):  
+    def init_data_dir(self, dirpath):
         self.third_cam_dir = os.path.join(OUTPUT_FOLDER, 'third_cam')
         self.dash_cam_dir = os.path.join(OUTPUT_FOLDER, 'dash_cam')
-        self.obstacle_detector_dir = os.path.join(OUTPUT_FOLDER,'obstacle_detector')
+        self.obstacle_detector_dir = os.path.join(OUTPUT_FOLDER,
+                                                  'obstacle_detector')
         self.velocity_dir = os.path.join(OUTPUT_FOLDER, 'velocity')
 
         maybe_create_dir(self.third_cam_dir)
@@ -172,53 +177,51 @@ class Vehicle(Tickable):
     def speed(self):
         velocity = self.entity.get_velocity()
 
-        if( self.b_savedata):
-            current_speed = np.linalg.norm([velocity.x, velocity.y, velocity.z])
-            velocity_dict = {
-                'x':velocity.x,
-                'y':velocity.y,
-                'z':velocity.z
-                }
-            save_velocity_data(f'{self.velocity_dir}/speed_history.txt',velocity_dict)
+        if (self.b_savedata):
+            current_speed = np.linalg.norm(
+                [velocity.x, velocity.y, velocity.z])
+            velocity_dict = {'x': velocity.x, 'y': velocity.y, 'z': velocity.z}
+            save_velocity_data(f'{self.velocity_dir}/speed_history.txt',
+                               velocity_dict)
         return np.linalg.norm([velocity.x, velocity.y, velocity.z])
 
     def on_dash_cam(self, image):
         self.monitors['dash_cam'] = image
-        if( self.b_savedata ):
+        if (self.b_savedata):
             #cc = carla.ColorConverter.LogarithmicDepth
             cc = carla.ColorConverter.Raw
-            save_image_data(f'{self.dash_cam_dir}/{image.frame:06d}.png',image, cc)
+            save_image_data(f'{self.dash_cam_dir}/{image.frame:06d}.png',
+                            image, cc)
 
     def on_third_cam(self, image):
         self.monitors['third_cam'] = image
 
-        if( self.b_savedata):
+        if (self.b_savedata):
             #cc = carla.ColorConverter.LogarithmicDepth
             cc = carla.ColorConverter.Raw
-            save_image_data(f'{self.third_cam_dir}/{image.frame:06d}.png',image, cc)
+            save_image_data(f'{self.third_cam_dir}/{image.frame:06d}.png',
+                            image, cc)
 
     def on_line_invasion(self, event):
         """On invasion method"""
         self.monitors['line_invasion'] = event
-        
 
     def on_obstacle_detector(self, event):
         # print(event, f"distance={event.distance} m")
         self.monitors['od'] = event
 
-        if( self.b_savedata):
+        if (self.b_savedata):
             obstacle_detector_dict = {
-                'frame':event.frame,
-                'timestamp':event.timestamp,
-                'distance':event.distance
-                }
+                'frame': event.frame,
+                'timestamp': event.timestamp,
+                'distance': event.distance
+            }
 
             #save to separate file
             pth = f'{self.obstacle_detector_dir}/{event.frame:06d}.txt'
-            save_obstacle_detector_data(pth,obstacle_detector_dict)
+            save_obstacle_detector_data(pth, obstacle_detector_dict)
             #save to the same file
             #save_to_disk(f'{self.obstacle_detector_dir}/event.txt',obstacle_detector_dict)
-            
 
     def get_od_data(self, clear):
         if 'od' in self.monitors:
@@ -226,6 +229,7 @@ class Vehicle(Tickable):
             if clear:
                 self.monitors['od'] = None
             return ret
+
     def get_line_invasion_data(self, clear):
         if 'line_invasion' in self.monitors:
             ret = self.monitors['line_invasion']
@@ -246,4 +250,15 @@ class Vehicle(Tickable):
     def on_tick(self):
         if self.mode == Vehicle.MODE_MANUAL:
             # print(KeyboardInput.controll)
-            self.entity.apply_control(KeyboardInput.controll)
+            self.entity.apply_control(self.input_controller.control)
+        if self.mode == Vehicle.MODE_ASSISTANT:
+            control = self.input_controller.control
+            speedlimit = self.speed_limit / 3.6
+
+            if self.speed < speedlimit:
+                control.throttle = max(1,
+                                       0.2 + (speedlimit - self.speed) * 0.1)
+            else:
+                control.throttle = min(0,
+                                       0.2 - (self.speed - speedlimit) * 0.02)
+            self.entity.apply_control(control)

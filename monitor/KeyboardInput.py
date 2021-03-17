@@ -11,29 +11,27 @@ class KeyboardInput(QObject):
 
     def reset(self, init = False):
         if init:
-            KeyboardInput.controll = carla.VehicleControl()
+            self.control = carla.VehicleControl()
 
-    def on_tick(self):
-        pass
 
     def eventFilter(self, target: 'QObject', event: 'QEvent') -> bool:
         if event.type() == QEvent.KeyPress or event.type() == QEvent.KeyRelease:
             key = event.key()
             isPress = event.type() == QEvent.KeyPress
             if key == Qt.Key_W:
-                KeyboardInput.controll.throttle = isPress
+                self.control.throttle = isPress
             elif key == Qt.Key_S:
-                KeyboardInput.controll.brake = isPress
+                self.control.brake = isPress
             elif key == Qt.Key_A:
-                KeyboardInput.controll.steer = -1.0 * isPress
+                self.control.steer = -1.0 * isPress
             elif key == Qt.Key_D:
-                KeyboardInput.controll.steer = 1.0 * isPress
+                self.control.steer = 1.0 * isPress
             elif key == Qt.Key_Space: # Space
-                KeyboardInput.controll.hand_brake = isPress
+                self.control.hand_brake = isPress
             elif key == Qt.Key_BracketLeft and isPress:
-                KeyboardInput.controll.reverse = True
+                self.control.reverse = True
             elif key == Qt.Key_BracketRight and isPress:
-                KeyboardInput.controll.reverse = False
+                self.control.reverse = False
 
             return True
         return super().eventFilter(target, event)
