@@ -25,9 +25,6 @@ class MainApplication(QMainWindow):
         # self.scene = QGraphicsScene(self)
         Ticker.TickerManager.init(self)
         self.keyboard_input = KeyboardInput(self)
-        self.yolo_detector = yolo_detector.yolo_detector()
-        self.speedsign_detector = speedsign_detector.speedsign_detector()
-        self.lane_detector = lane_detector.lane_detector()
 
     def initUI(self):
         self.spawnVehicle.clicked.connect(self.on_click_spawn)
@@ -45,21 +42,39 @@ class MainApplication(QMainWindow):
         self.ticker.timeout.connect(self.on_ui_tick)
         self.ticker.timeout.connect(self.on_tick)
 
+        self.connectButton.clicked.connect(self.on_click_connect)
+        self.loadmapButton.clicked.connect(self.on_click_loadmap)
+
         self.assistantModeButton.toggled.connect(self.onSelectAssistantMode)
         self.autoModeButton.toggled.connect(self.onSelectAutoMode)
         self.manualControlButton.toggled.connect(self.onSelectManualMode)
 
+    def on_click_connect(self):
+        self.controller.connect(self.hostText.text(), self.portText.text())
+        self.sceneComboBox.clear()
+        self.sceneComboBox.addItems(self.controller.get_maps())
+
+        self.vehicleComboBox.clear()
+        self.vehicleComboBox.addItems(self.controller.get_vehicle_blueprints())
+
+        self.yolo_detector = yolo_detector.yolo_detector()
+        self.speedsign_detector = speedsign_detector.speedsign_detector()
+        self.lane_detector = lane_detector.lane_detector()
+
+    def on_click_loadmap(self):
+        self.controller.set_map(self.sceneComboBox.currentText())
+
     @property
     def vehicle_mode(self):
-        if self.manualControlButton.toggled:
+        if self.manualControlButton.isChecked():
             return Vehicle.MODE_MANUAL
-        elif self.assistantModeButton.toggled:
+        elif self.assistantModeButton.isChecked():
             return Vehicle.MODE_ASSISTANT
-        elif self.autoModeButton.toggled:
+        elif self.autoModeButton.isChecked():
             return Vehicle.MODE_AUTOMATIC
 
     def on_click_spawn(self):
-        self.vehicle = self.controller.spawn_vehicle("vehicle.tesla.model3",
+        self.vehicle = self.controller.spawn_vehicle(self.vehicleComboBox.currentText(),
                                                      self.vehicle_mode)
 
     def on_click_spawn_npc(self):

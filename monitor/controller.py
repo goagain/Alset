@@ -7,21 +7,30 @@ class Controller:
     globalController = None
 
     def __init__(self):
-        self.client = carla.Client("localhost", 2000)
-        self.client.set_timeout(10.0)
+        self.client = None
+        self.world = None
 
-        self.world = self.client.load_world('Town02')
-
-        self.vehicle_blueprints = {}
-        self.vehicles = []
+        self.vehicle_blueprints = []
+        self.current_vehicle = None
         self.npc_list = []
+
+    def connect(self, host, port):
+        self.client = carla.Client(host, int(port))
+        self.client.set_timeout(10.0)
+        self.world = self.client.get_world()
+
+    def get_maps(self):
+        return self.client.get_available_maps()
+
+    def set_map(self, map_name):
+        self.world = self.client.load_world(map_name)
+
+
+
+
     def spawn_vehicle(self, car_name, car_mode) -> Vehicle.Vehicle:
-        if not self.vehicles:
-            vehicle = Vehicle.Vehicle(self, car_name, mode=car_mode)
-        else:
-            return None
-        self.vehicles.append(vehicle)
-        return vehicle
+        self.current_vehicle = Vehicle.Vehicle(self, car_name, mode=car_mode)
+        return self.current_vehicle
 
     def spawn_npc(self, number_of_npc=50):
         if self.npc_list:
@@ -53,7 +62,7 @@ class Controller:
         return 
 
     def get_vehicle_blueprints(self) -> list:
-        if self.vehicle_blueprints:
-            for blueprint in self.blueprints.filter('vehicle'):
-                self.vehicle_blueprints[blueprint.id] = blueprint
+        if not self.vehicle_blueprints:
+            for blueprint in self.world.get_blueprint_library().filter('vehicle.*'):
+                self.vehicle_blueprints.append(blueprint.id)
         return self.vehicle_blueprints
