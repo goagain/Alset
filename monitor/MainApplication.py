@@ -78,7 +78,7 @@ class MainApplication(QMainWindow):
                                                      self.vehicle_mode)
 
     def on_click_spawn_npc(self):
-        self.vehicle = self.controller.spawn_npc()
+        self.vehicle = self.controller.spawn_npc(number_of_vehicles=50)
 
     @log
     def on_dashcam(self, image):
