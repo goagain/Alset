@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
-from PyQt5.QtGui import QImage, QKeyEvent, QPixmap
+from PyQt5.QtGui import QImage, QKeyEvent, QPixmap, QFont
 from PyQt5.QtCore import QObject, QEvent, pyqtSignal, pyqtSlot, QTimer, Qt
 from Vehicle import Vehicle
 from controller import Controller
@@ -25,8 +25,6 @@ class MainApplication(QMainWindow):
         # self.scene = QGraphicsScene(self)
         Ticker.TickerManager.init(self)
         
-        
-
     def initUI(self):
         self.spawnVehicle.clicked.connect(self.on_click_spawn)
         self.spawnVehicle.installEventFilter(self)
@@ -49,6 +47,19 @@ class MainApplication(QMainWindow):
         self.assistantModeButton.toggled.connect(self.onSelectAssistantMode)
         self.autoModeButton.toggled.connect(self.onSelectAutoMode)
         self.manualControlButton.toggled.connect(self.onSelectManualMode)
+
+        #self.loadmapButton.hide()
+        self.label_info.setFont(QFont("Roman times",10,QFont.Bold))
+
+        self.horizontalLayout_2.setStretchFactor(self.graphics, 2 )
+        self.horizontalLayout_2.setStretchFactor(self.verticalLayout, 1)
+
+        # center window
+        screen = QDesktopWidget().screenGeometry()
+        size = self.geometry()
+        newleft = (screen.width() - size.width())/2
+        newTop = (screen.height() - size.height())/2
+        self.move(newleft, newTop)
 
     def on_click_connect(self):
         self.controller.connect(self.hostText.text(), self.portText.text())
@@ -79,7 +90,12 @@ class MainApplication(QMainWindow):
                                                      self.vehicle_mode)
 
     def on_click_spawn_npc(self):
-        self.vehicle = self.controller.spawn_npc(number_of_vehicles=50)
+        self.controller.spawn_npc()
+        self.controller.spawn_walker()
+    
+    def closeEvent(self, event):
+        self.controller.destroy()
+        event.accept()
 
     @log
     def on_dashcam(self, image):

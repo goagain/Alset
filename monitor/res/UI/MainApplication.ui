@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1462</width>
+    <width>1520</width>
     <height>1030</height>
    </rect>
   </property>
@@ -56,7 +56,7 @@
        <widget class="QGroupBox" name="groupBox_4">
         <property name="maximumSize">
          <size>
-          <width>16777215</width>
+          <width>1677</width>
           <height>80</height>
          </size>
         </property>
@@ -100,7 +100,7 @@
           <rect>
            <x>320</x>
            <y>30</y>
-           <width>316</width>
+           <width>150</width>
            <height>23</height>
           </rect>
          </property>
@@ -114,8 +114,8 @@
        <widget class="QGroupBox" name="groupBox_2">
         <property name="maximumSize">
          <size>
-          <width>16777215</width>
-          <height>60</height>
+          <width>1677</width>
+          <height>70</height>
          </size>
         </property>
         <property name="title">
@@ -139,8 +139,8 @@
        <widget class="QGroupBox" name="groupBox_3">
         <property name="maximumSize">
          <size>
-          <width>16777215</width>
-          <height>60</height>
+          <width>1677</width>
+          <height>70</height>
          </size>
         </property>
         <property name="title">
@@ -177,7 +177,7 @@
           <rect>
            <x>10</x>
            <y>30</y>
-           <width>195</width>
+           <width>150</width>
            <height>17</height>
           </rect>
          </property>
@@ -188,9 +188,9 @@
         <widget class="QRadioButton" name="assistantModeButton">
          <property name="geometry">
           <rect>
-           <x>211</x>
+           <x>165</x>
            <y>30</y>
-           <width>194</width>
+           <width>180</width>
            <height>17</height>
           </rect>
          </property>
@@ -198,15 +198,15 @@
           <string>Adaptive Assistant Mode</string>
          </property>
          <property name="checked">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
         <widget class="QRadioButton" name="autoModeButton">
          <property name="geometry">
           <rect>
-           <x>411</x>
+           <x>360</x>
            <y>30</y>
-           <width>195</width>
+           <width>160</width>
            <height>17</height>
           </rect>
          </property>
@@ -214,7 +214,7 @@
           <string>Automatic Mode</string>
          </property>
          <property name="checked">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
         <widget class="QSpinBox" name="speedLimit">

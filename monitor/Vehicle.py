@@ -63,8 +63,6 @@ class Vehicle(Tickable):
         while (bscussed == False):
             bscussed = self.spawn_car()
 
-        self.mode = mode
-
         self.dash_camera = None
         if dashcam:
             self.init_dashcam()
@@ -95,6 +93,8 @@ class Vehicle(Tickable):
 
         self.input_controller = KeyboardInput(self.world_controller.uiroot)
         self.speed_limit = 0
+
+        self.mode = mode
 
     @property
     def mode(self):
@@ -248,6 +248,8 @@ class Vehicle(Tickable):
             return self.monitors['third_cam']
 
     def on_tick(self):
+        if not self.entity:
+            return
         if self.mode == Vehicle.MODE_MANUAL:
             # print(KeyboardInput.controll)
             self.entity.apply_control(self.input_controller.control)
@@ -262,3 +264,25 @@ class Vehicle(Tickable):
                 control.throttle = min(0,
                                        0.2 - (self.speed - speedlimit) * 0.02)
             self.entity.apply_control(control)
+
+    def destroy(self):
+        if self.dash_camera:
+            self.dash_camera.destroy()
+            self.dash_camera = None
+        if self.third_camera:
+            self.third_camera.destroy()
+            self.third_camera = None
+        if self.obstacle_detector:
+            self.obstacle_detector.destroy()
+            self.obstacle_detector = None
+        if self.radar:
+            self.radar.destroy()
+            self.radar = None
+        if self.lane_invasion_detector:
+            self.lane_invasion_detector.destroy()
+            self.lane_invasion_detector = None
+
+        #have problem to release this
+        #if self.entity:
+        #    self.entity.destroy()
+        #    self.entity = None

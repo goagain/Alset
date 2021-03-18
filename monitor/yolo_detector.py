@@ -16,7 +16,7 @@ class yolo_detector:
     def __init__(self, img_size=640, stride=32, debug = 0):
         path = 'foo'
         opt_device = '0'
-        weights = 'yolov5s.pt'
+        weights = 'yolo5s.pt'
         device = select_device(opt_device)
         print(f'PyTorch selected device = {device}')
         half = device.type != 'cpu'  # half precision only supported on CUDA
