@@ -7,17 +7,7 @@ from PyQt5.uic import loadUi
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QObject, QEvent, pyqtSignal, pyqtSlot, QTimer
 from Ticker import Tickable
-from logger import log
-from dataexport import *
 import MainApplication
-
-OUTPUT_FOLDER = '_out'
-
-
-def maybe_create_dir(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
 
 class Vehicle(Tickable):
     MODE_MANUAL = 0,
@@ -38,11 +28,6 @@ class Vehicle(Tickable):
     ):
         super().__init__()
 
-        # collect data or not, default is False
-        self.b_savedata = False
-        if (self.b_savedata):
-            self.init_data_dir(OUTPUT_FOLDER)
-
         self.world_controller = world_controller
         self.world = self.world_controller.world
 
@@ -60,8 +45,13 @@ class Vehicle(Tickable):
         self.blueprint.set_attribute('color', color)
 
         bscussed = self.spawn_car()
-        while (bscussed == False):
+        count = 0
+        while (bscussed == False and count<3):
             bscussed = self.spawn_car()
+            count += 1
+        
+        if( bscussed == False ):
+            print('Spawn car failed! please check the connection with Carla Server')
 
         self.dash_camera = None
         if dashcam:
@@ -92,7 +82,6 @@ class Vehicle(Tickable):
                 carla.AttachmentType.Rigid)
 
         self.input_controller = KeyboardInput(self.world_controller.uiroot)
-        self.speed_limit = 0
 
         self.mode = mode
 
@@ -161,46 +150,16 @@ class Vehicle(Tickable):
             carla.AttachmentType.Rigid)
         self.obstacle_detector.listen(self.on_obstacle_detector)
 
-    def init_data_dir(self, dirpath):
-        self.third_cam_dir = os.path.join(OUTPUT_FOLDER, 'third_cam')
-        self.dash_cam_dir = os.path.join(OUTPUT_FOLDER, 'dash_cam')
-        self.obstacle_detector_dir = os.path.join(OUTPUT_FOLDER,
-                                                  'obstacle_detector')
-        self.velocity_dir = os.path.join(OUTPUT_FOLDER, 'velocity')
-
-        maybe_create_dir(self.third_cam_dir)
-        maybe_create_dir(self.dash_cam_dir)
-        maybe_create_dir(self.obstacle_detector_dir)
-        maybe_create_dir(self.velocity_dir)
-
     @property
     def speed(self):
         velocity = self.entity.get_velocity()
-
-        if (self.b_savedata):
-            current_speed = np.linalg.norm(
-                [velocity.x, velocity.y, velocity.z])
-            velocity_dict = {'x': velocity.x, 'y': velocity.y, 'z': velocity.z}
-            save_velocity_data(f'{self.velocity_dir}/speed_history.txt',
-                               velocity_dict)
         return np.linalg.norm([velocity.x, velocity.y, velocity.z])
 
     def on_dash_cam(self, image):
         self.monitors['dash_cam'] = image
-        if (self.b_savedata):
-            #cc = carla.ColorConverter.LogarithmicDepth
-            cc = carla.ColorConverter.Raw
-            save_image_data(f'{self.dash_cam_dir}/{image.frame:06d}.png',
-                            image, cc)
 
     def on_third_cam(self, image):
         self.monitors['third_cam'] = image
-
-        if (self.b_savedata):
-            #cc = carla.ColorConverter.LogarithmicDepth
-            cc = carla.ColorConverter.Raw
-            save_image_data(f'{self.third_cam_dir}/{image.frame:06d}.png',
-                            image, cc)
 
     def on_line_invasion(self, event):
         """On invasion method"""
@@ -209,19 +168,6 @@ class Vehicle(Tickable):
     def on_obstacle_detector(self, event):
         # print(event, f"distance={event.distance} m")
         self.monitors['od'] = event
-
-        if (self.b_savedata):
-            obstacle_detector_dict = {
-                'frame': event.frame,
-                'timestamp': event.timestamp,
-                'distance': event.distance
-            }
-
-            #save to separate file
-            pth = f'{self.obstacle_detector_dir}/{event.frame:06d}.txt'
-            save_obstacle_detector_data(pth, obstacle_detector_dict)
-            #save to the same file
-            #save_to_disk(f'{self.obstacle_detector_dir}/event.txt',obstacle_detector_dict)
 
     def get_od_data(self, clear):
         if 'od' in self.monitors:

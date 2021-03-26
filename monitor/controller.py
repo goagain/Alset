@@ -29,8 +29,11 @@ class Controller:
 
     def set_map(self, map_name):
         #destory all actors first
-        self.destroy()
-        self.world = self.client.load_world(map_name)
+        try:
+            self.destroy()
+            self.world = self.client.load_world(map_name)
+        except Exception as e:
+            print(e)
 
     def spawn_vehicle(self, car_name, car_mode) -> Vehicle.Vehicle:
         if self.current_vehicle:

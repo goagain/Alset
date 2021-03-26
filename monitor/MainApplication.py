@@ -10,7 +10,7 @@ from logger import log
 import Ticker
 import yolo_detector
 import lane_detector
-import speedsign_detector
+#import speedsign_detector
 import sys
 import traceback
 
@@ -22,6 +22,7 @@ class MainApplication(QMainWindow):
         loadUi("./res/UI/MainApplication.ui", self)
         self.initUI()
         self.controller = Controller(self)
+        self.statecount = 0
         # self.scene = QGraphicsScene(self)
         Ticker.TickerManager.init(self)
         
@@ -35,7 +36,7 @@ class MainApplication(QMainWindow):
         self.qimage = QImage()
         self.signal.connect(self.on_render)
         self.vehicle = None
-        self.curlimitspeed = 50
+        self.detect_limitspeed = 50
         self.ticker = QTimer(self)
         self.ticker.start(10)
         self.ticker.timeout.connect(self.on_ui_tick)
@@ -47,6 +48,10 @@ class MainApplication(QMainWindow):
         self.assistantModeButton.toggled.connect(self.onSelectAssistantMode)
         self.autoModeButton.toggled.connect(self.onSelectAutoMode)
         self.manualControlButton.toggled.connect(self.onSelectManualMode)
+
+        #display speedLimit
+        self.speedLimit.setVisible(False)
+        self.label_speedlimit.setVisible(False)
 
         #self.loadmapButton.hide()
         self.label_info.setFont(QFont("Roman times",10,QFont.Bold))
@@ -70,7 +75,7 @@ class MainApplication(QMainWindow):
         self.vehicleComboBox.addItems(self.controller.get_vehicle_blueprints())
 
         self.yolo_detector = yolo_detector.yolo_detector()
-        self.speedsign_detector = speedsign_detector.speedsign_detector()
+        #self.speedsign_detector = speedsign_detector.speedsign_detector()
         self.lane_detector = lane_detector.lane_detector()
 
     def on_click_loadmap(self):
@@ -149,40 +154,29 @@ class MainApplication(QMainWindow):
     def onSelectAssistantMode(self, toggled):
         if toggled and self.vehicle:
             self.vehicle.mode = Vehicle.MODE_ASSISTANT
+            self.speedLimit.setVisible(True)
+            self.label_speedlimit.setVisible(True)
 
     @log
     def onSelectAutoMode(self, toggled):
         if toggled and self.vehicle:
             self.vehicle.mode = Vehicle.MODE_AUTOMATIC
+            self.speedLimit.setVisible(False)
+            self.label_speedlimit.setVisible(False)
 
     @log
     def onSelectManualMode(self, toggled):
         if toggled and self.vehicle:
             self.vehicle.mode = Vehicle.MODE_MANUAL
+            self.speedLimit.setVisible(False)
+            self.label_speedlimit.setVisible(False)
 
     def on_ui_tick(self):
         if not self.vehicle:
             return
 
         info = []
-        
-        if self.vehicle.dash_cam_image:
-            self.on_render(self.vehicle.dash_cam_image, self.dash_cam)
-            detect_img = self.yolo_detector.detect(self.vehicle.dash_cam_image)
-            self.on_render_detect(detect_img, self.vehicle.dash_cam_image.width, self.vehicle.dash_cam_image.height, self.radar)
-            detect_img1,bchange, speed = self.speedsign_detector.detect(self.vehicle.dash_cam_image)
-            if( bchange):
-                self.curlimitspeed = speed
 
-            try:
-                #detect_img = lane_detector.process_lane_detect(self.vehicle.dash_cam_image)
-                detect_img = self.lane_detector.detect_lines(self.vehicle.dash_cam_image)
-                self.on_render_laneview(detect_img, self.vehicle.dash_cam_image.width, self.vehicle.dash_cam_image.height, self.laneview)
-            except Exception as e:
-                traceback.print_exception(*sys.exc_info())
-                #self.vehicle.dash_cam_image.save_to_disk(r'c:\tmp\lde.png')
-                print(e)
-                #raise(e)
         if self.vehicle.third_cam_image:
             self.on_render(self.vehicle.third_cam_image, self.third_cam)
         if self.vehicle.obstacle_detector:
@@ -198,8 +192,31 @@ class MainApplication(QMainWindow):
                 text = ['%r' % str(x).split()[-1] for x in lane_types]
                 info.append(f'Crossed line: {text}')
         
+        if self.vehicle.dash_cam_image:
+            self.on_render(self.vehicle.dash_cam_image, self.dash_cam)
+            detect_img, speed = self.yolo_detector.detect(self.vehicle.dash_cam_image)
+            self.on_render_detect(detect_img, self.vehicle.dash_cam_image.width, self.vehicle.dash_cam_image.height, self.radar)
+            #detect_img1,bchange, speed = self.speedsign_detector.detect(self.vehicle.dash_cam_image)
+            if( speed >0 ):
+                self.detect_limitspeed = speed
+
+            if self.vehicle.speed >0:
+                if( (self.vehicle.speed*3.6) > self.detect_limitspeed):
+                    info.append('Over speed!!!!')
+                    # Begin to flash or reduce speed
+
+            try:
+                #detect_img = lane_detector.process_lane_detect(self.vehicle.dash_cam_image)
+                detect_img = self.lane_detector.detect_lines(self.vehicle.dash_cam_image)
+                self.on_render_laneview(detect_img, self.vehicle.dash_cam_image.width, self.vehicle.dash_cam_image.height, self.laneview)
+            except Exception as e:
+                traceback.print_exception(*sys.exc_info())
+                #self.vehicle.dash_cam_image.save_to_disk(r'c:\tmp\lde.png')
+                print(e)
+                #raise(e)
+        
         self.speedText.setText(str(int(self.vehicle.speed * 3.6)))
 
         info.append(f'Speed: {self.vehicle.speed * 3.6 :.1f} km/h')
-        info.append(f'Speed Limit: {self.curlimitspeed} km/h')
+        info.append(f'Speed Limit: {self.detect_limitspeed} km/h')
         self.label_info.setText('\n'.join(info))

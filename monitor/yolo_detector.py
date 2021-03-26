@@ -10,13 +10,13 @@ from utils.general import check_img_size, check_requirements, non_max_suppressio
     xyxy2xywh, strip_optimizer, set_logging, increment_path
 from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized
-import TLState
-import detectColor
+#import TLState
+#import detectColor
 class yolo_detector:
     def __init__(self, img_size=640, stride=32, debug = 0):
         path = 'foo'
         opt_device = '0'
-        weights = 'yolov5s.pt'
+        weights = 'object_detector.pt'
         device = select_device(opt_device)
         print(f'PyTorch selected device = {device}')
         half = device.type != 'cpu'  # half precision only supported on CUDA
@@ -43,9 +43,10 @@ class yolo_detector:
         self.colors = colors
         self.stride = stride
         self.debug = debug
-        #cv2.namedWindow('detect', cv2.WINDOW_NORMAL)
+        cv2.namedWindow('detect', cv2.WINDOW_NORMAL)
 
     def detect(self, image, frame=12345):
+        limitspeed = 0
         if self.debug>0:
             print(type(image))
         array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
@@ -55,7 +56,7 @@ class yolo_detector:
         opt_agnostic_nms = False
         opt_classes = None
         opt_iou_thres = 0.45
-        opt_conf_thres = 0.60
+        opt_conf_thres = 0.40
         opt_save_conf = False
         newimg_np = letterbox(img_np, self.img_sz, stride=self.stride)[0]
         im0s = newimg_np  #cv2.cvtColor(newimg_np, cv2.COLOR_RGB2BGR)
@@ -107,22 +108,21 @@ class yolo_detector:
                     if self.debug>0:
                         print('label:',label)
 
-                    #detect the light color
-                    if clsname.find('traffic light')>=0:
-                        traffic_img = newimg_np[int(xyxy[1]):int(xyxy[3]),int(xyxy[0]):int(xyxy[2]),:]
-                        if traffic_img.shape[0]>0:
-                            state = TLState.detectState(traffic_img,TLState.TLType.regular.value)
-                            if state>0:
-                                label = label + " - " + TLState.TLState(state).name
+                    if( clsname.find('traffic.speed_limit.30')>=0):
+                        limitspeed = 30
+                    elif (clsname.find('traffic.speed_limit.60')>=0):
+                        limitspeed = 60
+                    elif (clsname.find('traffic.speed_limit.90')>=0):
+                        limitspeed = 90
                    
-                    if clsname in ['traffic light','person','car','bicycle','bus','truck']:
-                        plot_one_box(xyxy, newimg_np, color=tuple(self.colors[int(cls)]), label=label, line_thickness=1)
+                    #if clsname in ['traffic light','person','car','bicycle','bus','truck']:
+                    plot_one_box(xyxy, newimg_np, color=tuple(self.colors[int(cls)]), label=label, line_thickness=1)
 
             # Print time (inference + NMS)
             if self.debug>0:
                 print(f'{s}Done. ({t2 - t1:.3f}s)')
 
-            # cv2.imshow('detect', newimg_np)
-            # cv2.waitKey(1) # 1 millisecond
+            cv2.imshow('detect', newimg_np)
+            cv2.waitKey(1) # 1 millisecond
             bgr_image = cv2.cvtColor(newimg_np, cv2.COLOR_RGB2BGR)
-            return bgr_image
+            return bgr_image, limitspeed
