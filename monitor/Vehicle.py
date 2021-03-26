@@ -1,3 +1,4 @@
+import time
 from KeyboardInput import KeyboardInput
 import carla
 import numpy as np
@@ -63,6 +64,8 @@ class Vehicle(Tickable):
 
         if obstacle_detector:
             self.init_obstacle_detector()
+            self.frontDistance = 100.0
+            self.last_distance_update_time = time.time()
 
         self.lane_invasion_detector = None
         if lane_invasion_detector:
@@ -91,6 +94,8 @@ class Vehicle(Tickable):
 
     @mode.setter
     def mode(self, value):
+        self.input_controller.reset()
+
         self._mode = value
         if value == Vehicle.MODE_MANUAL:
             self.entity.set_autopilot(False)
@@ -143,8 +148,8 @@ class Vehicle(Tickable):
     def init_obstacle_detector(self):
         od_bp = self.world.get_blueprint_library().find(
             'sensor.other.obstacle')
-        od_bp.set_attribute('distance', '50')
-        od_bp.set_attribute('only_dynamics', 'true')
+        od_bp.set_attribute('distance', '100')
+        od_bp.set_attribute('only_dynamics', 'false')
         self.obstacle_detector = self.world.spawn_actor(
             od_bp, carla.Transform(carla.Location(z=1)), self.entity,
             carla.AttachmentType.Rigid)
@@ -165,9 +170,37 @@ class Vehicle(Tickable):
         """On invasion method"""
         self.monitors['line_invasion'] = event
 
+    @property
+    def frontDistance(self):
+        if self.last_distance_update_time is not None and time.time() - self.last_distance_update_time < 1:
+            return self._frontDistance
+        return 1000
+
+    @frontDistance.setter
+    def frontDistance(self, value):
+        self.last_distance_update_time = time.time()
+        self._frontDistance = value
+
     def on_obstacle_detector(self, event):
         # print(event, f"distance={event.distance} m")
         self.monitors['od'] = event
+        self.od_data = event
+        self.frontDistance = event.distance
+
+    @property
+    def od_data(self):
+        try:
+            if time.time() - self.last_od_update_time > 1:
+                return None
+            else:
+                return self._od_data
+        finally:
+            return None
+            
+    @od_data.setter
+    def od_data(self, value):
+        self._od_data = value
+        self.last_od_update_time = time.time()
 
     def get_od_data(self, clear):
         if 'od' in self.monitors:

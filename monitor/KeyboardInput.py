@@ -12,7 +12,12 @@ class KeyboardInput(QObject):
     def reset(self, init = False):
         if init:
             self.control = carla.VehicleControl()
-
+        else:
+            self.control.throttle = 0
+            self.control.brake = 0
+            self.control.steer = 0
+            self.control.hand_brake = 0
+            self.control.reverse = False
 
     def eventFilter(self, target: 'QObject', event: 'QEvent') -> bool:
         if event.type() == QEvent.KeyPress or event.type() == QEvent.KeyRelease:
