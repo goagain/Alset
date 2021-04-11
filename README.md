@@ -69,19 +69,18 @@ Add additional notes about how to deploy this on a live system
 
 * [Calar](https://carla.org/) - The web framework used
 * [UI](https://pypi.org/project/PyQt5/) - PyQt5
-* [labelImg](https://github.com/tzutalin/labelImg) - A graphical image annotation tool.
 
 ## Contributing
 
-1. DataGenerateTool
+1. DataGenerateTool  
    You can generate and autolable image data by using autolabel_carla.py, create your own dataset in Carla.
    The name of the image and label will be same,  the label is Yolo formate txt file.
    
-2. Dataset
+2. Dataset  
    We have generate a dataset,which can be trained in Yolo. You can download here.
    All data are labeled, which contains 17902 training data and 4548 validation data.
    
-3. Pretained object detection model
+3. Pretained object detection model  
    object_detector.pt is the pretained model by Yolo v5 small, using the dataset generate from Carla.  You can using it to detect cars, pedestrian, traffic light(red, bule, yellow), speed sign(30, 60, 90) and bus station.
 
 
