@@ -37,13 +37,13 @@ A step by step series of examples that tell you how to get a development env run
 Say what the step will be
 
 ```
-Give the example
+Downloade the whole file and extract it
 ```
 
-And repeat
+And 
 
 ```
-until finished
+Download Visual Studio Code
 ```
 
 End with an example of getting some data out of the system or using it for a little demo
@@ -57,16 +57,9 @@ Run main.py
 Explain what these tests test and why
 
 ```
-Give an example
+Run Main for checking the whole UI
 ```
 
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
 
 ## Deployment
 
@@ -99,13 +92,13 @@ We have all files repsenting our developing steps. [Milestoen File](https://gith
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **DC Capstone Group** - *Initial work* - [Calar](https://github.com/goagain/Alset-Autopilot-System)
 
 See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 ## License
 
-This project is licensed under theApache License 2.0  - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under theApache License 2.0  - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
