@@ -1,4 +1,4 @@
-# Capstone Project: Automatic Driving by Taking Advantage of Calar
+# Capstone Project: Automatic Driving by Taking Advantage of Carla
 
 CARLA is an open-source simulator for autonomous driving research. It provides various functions like 3D environment simulation, spawning NPC, and having different kinds of sensor data ready. CARLA offers a great base we could build our automatic driving system.
 There are three Switch modes in total that players can choose from:: manual operation, semi-automatic assistance, and fully automatic driving. Moreover, the player has an option to choose whether to create NPC and find their favorite vehicle to play. 
