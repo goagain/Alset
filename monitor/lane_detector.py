@@ -3,8 +3,7 @@ import cv2
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import glob
-import tensorflow as tf
-from PIL import Image
+#from PIL import Image
 
 def cal_undistort(img, objpoints, imgpoints):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -407,71 +406,4 @@ def process_lane_detect(img_np):
     used_warped = binary_warped
     used_ret = ret
     
-    return result 
-
-# Class to average lanes with
-class lane_detector():
-    def _initTF(self):
-        gpus = tf.config.list_physical_devices('GPU')
-        if gpus:
-            try:
-                # Currently, memory growth needs to be the same across GPUs
-                for gpu in gpus:
-                    tf.config.experimental.set_memory_growth(gpu, True)
-                    logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-                    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-            except RuntimeError as e:
-                # Memory growth must be set before GPUs have been initialized
-                print(e)
-
-    def __init__(self):
-        self._initTF()
-        self.recent_fit = []
-        self.avg_fit = []
-        self.model = tf.keras.models.load_model('line_detector.h5')
-            
-    def detect_lines(self, image):
-        """ Takes in a road image, re-sizes for the model,
-        predicts the lane to be drawn from the model in G color,
-        recreates an RGB image of a lane and merges with the
-        original road image.
-        """
-        # Get image ready for feeding into model
-        #small_img = imresize(image, (80, 160, 3))
-        array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
-        array = np.reshape(array, (image.height, image.width, 4))
-        image = cv2.cvtColor(array, cv2.COLOR_RGBA2BGR)
-        #print(image.shape)
-        small_img = np.array(Image.fromarray(image.astype(np.uint8)).resize((160, 80)))
-        small_img = np.array(small_img)
-        small_img = small_img[None,:,:,:]
-        #print(small_img.shape)
-
-        # Make prediction with neural network (un-normalize value by multiplying by 255)
-        prediction = self.model.predict(small_img)[0] * 255
-
-        # Add lane prediction to list for averaging
-        self.recent_fit.append(prediction)
-        # Only using last five for average
-        if len(self.recent_fit) > 5:
-            self.recent_fit = self.recent_fit[1:]
-
-        # Calculate average detection
-        self.avg_fit = np.mean(np.array([i for i in self.recent_fit]), axis = 0)
-
-        # Generate fake R & B color dimensions, stack with G
-        blanks = np.zeros_like(self.avg_fit).astype(np.uint8)  
-        lane_drawn = np.dstack((blanks, self.avg_fit, blanks))
-        
-
-        # Re-size to match the original image
-        #lane_image = np.array(Image.fromarray(lane_drawn.astype(np.uint8)).resize((1280, 720)))
-        #lane_image = imresize(lane_drawn, (720,1280, 3))
-        lane_image = np.array(Image.fromarray(lane_drawn.astype(np.uint8)).resize((image.shape[1],image.shape[0])))
-        # Merge the lane drawing onto the original image
-
-        #print(image.shape)
-        #print(lane_image.shape)
-        result = cv2.addWeighted(image, 1, lane_image, 1, 0)
-        return result
-
+    return result, deviation

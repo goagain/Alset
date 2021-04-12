@@ -11,7 +11,6 @@ from logger import log
 import Ticker
 import yolo_detector
 import lane_detector
-#import speedsign_detector
 import sys
 import traceback
 
@@ -77,8 +76,6 @@ class MainApplication(QMainWindow):
         self.vehicleComboBox.addItems(self.controller.get_vehicle_blueprints())
 
         self.yolo_detector = yolo_detector.yolo_detector()
-        #self.speedsign_detector = speedsign_detector.speedsign_detector()
-        self.lane_detector = lane_detector.lane_detector()
 
     def on_click_loadmap(self):
         self.controller.set_map(self.sceneComboBox.currentText())
@@ -232,9 +229,9 @@ class MainApplication(QMainWindow):
                     # Begin to flash or reduce speed
 
             try:
-                #detect_img = lane_detector.process_lane_detect(self.vehicle.dash_cam_image)
-                detect_img = self.lane_detector.detect_lines(
-                    self.vehicle.dash_cam_image)
+                #deviation is the deviation from the center of the road
+                detect_img, deviation = lane_detector.process_lane_detect(self.vehicle.dash_cam_image)
+                direction = "left" if deviation < 0 else "right"
                 self.on_render_laneview(detect_img,
                                         self.vehicle.dash_cam_image.width,
                                         self.vehicle.dash_cam_image.height,
