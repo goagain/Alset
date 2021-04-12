@@ -14,47 +14,15 @@ Alexey Dosovitskiy, German Ros, Felipe Codevilla, Antonio Lopez, Vladlen Koltun;
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system. The recommended system is list below
 - Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD ryzen 7 / AMD ryzen 9+16 GB RAM memory
 - NVIDIA RTX 2070 / NVIDIA RTX 2080 / NVIDIA RTX 3070, NVIDIA RTX 3080
-- Ubuntu 18.04
+- PyTorch
+- Tensorflow2.4
 
-### Prerequisites
-
-We need to build the CARLA first
-
-```
-#Building CARLA
-# Download and install the UE patch  
-cd ~/UnrealEngine_4.24
-wget https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/UE_Patch/430667-13636743-patch.txt ~/430667-13636743-patch.txt
-patch --strip=4 < ~/430667-13636743-patch.txt
-# Build UE
-./Setup.sh && ./GenerateProjectFiles.sh && make
-```
-
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Downloade the whole file and extract it
-```
-
-And 
-
-```
-Download Visual Studio Code
-```
-
-End with an example of getting some data out of the system or using it for a little demo
 
 ## Running the tests
 
 Run main.py
 
 ### Break down into end to end tests
-
-Explain what these tests test and why
 
 ```
 Run Main for checking the whole UI
