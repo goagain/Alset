@@ -1,4 +1,8 @@
+import math
+import random
 import time
+
+from torch.functional import norm
 from KeyboardInput import KeyboardInput
 import carla
 import numpy as np
@@ -31,6 +35,7 @@ class Vehicle(Tickable):
 
         self.world_controller = world_controller
         self.world = self.world_controller.world
+        self.map = self.world.get_map()
 
         self.vehicle_controller = None
 
@@ -85,9 +90,11 @@ class Vehicle(Tickable):
                 carla.AttachmentType.Rigid)
 
         self.input_controller = KeyboardInput(self.world_controller.uiroot)
-
+        self.speed_limit = 40
         self.mode = mode
-
+        self.waypoint = None
+        self.next_waypoint = None
+        self.last_waypoint_update_time = 0
     @property
     def mode(self):
         return self._mode
@@ -236,12 +243,36 @@ class Vehicle(Tickable):
             control = self.input_controller.control
             speedlimit = self.speed_limit / 3.6
 
+            if time.time() - self.last_waypoint_update_time > 0.2:
+                self.waypoint = self.map.get_waypoint(self.entity.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
+                self.next_waypoint = self.waypoint.next(1.0)[0]
+
+            offset = self.next_waypoint.transform.location - self.entity.get_transform().location
+            len_offset = np.linalg.norm([offset.x, offset.y, offset.z])
+            
+            forward = self.entity.get_transform().get_forward_vector()
+            
+            sin_theta = (forward.x * offset.y - forward.y * offset.x) / len_offset
+
+            print (f'theta = {sin_theta}')
+            if self.speed > 0:
+                control.steer = sin_theta / self.speed * 0.3
+
             if self.speed < speedlimit:
                 control.throttle = max(1,
                                        0.2 + (speedlimit - self.speed) * 0.1)
+                control.brake = 0
+
             else:
                 control.throttle = min(0,
                                        0.2 - (self.speed - speedlimit) * 0.02)
+            if self.speed > 0 and self.frontDistance / self.speed < 3:
+                control.throttle = 0
+                control.brake = 0.5
+            elif self.speed > 0 and self.frontDistance / self.speed < 2:
+                control.throttle = 0
+                control.brake = 1
+
             self.entity.apply_control(control)
 
     def destroy(self):

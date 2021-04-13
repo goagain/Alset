@@ -67,6 +67,9 @@ class MainApplication(QMainWindow):
         newTop = (screen.height() - size.height()) / 2
         self.move(newleft, newTop)
 
+        #lane deviation data unit: m
+        self.deviation = 0
+
     def on_click_connect(self):
         self.controller.connect(self.hostText.text(), self.portText.text())
         self.sceneComboBox.clear()
@@ -147,7 +150,10 @@ class MainApplication(QMainWindow):
 
     def on_tick(self):
         if self.vehicle:
-            self.vehicle.speed_limit = self.speedLimit.value()
+            if self.detect_limitspeed < self.vehicle.speed_limit:
+                self.vehicle.speed_limit =  self.detect_limitspeed
+            else:
+                self.vehicle.speed_limit = self.speedLimit.value()
 
     @log
     def onSelectAssistantMode(self, toggled):
@@ -201,6 +207,11 @@ class MainApplication(QMainWindow):
                     self.labelDistance.setStyleSheet("background-color:red;")
                 else:
                     self.labelDistance.setStyleSheet("")
+            if self.vehicle.mode == Vehicle.MODE_MANUAL or self.vehicle.mode == Vehicle.MODE_ASSISTANT:
+                control = self.vehicle.input_controller.control
+                info.append(f'Throttle = {control.throttle}')
+                info.append(f'Brake = {control.brake}')
+                info.append(f'Steer = {control.steer}')
 
         if self.vehicle.lane_invasion_detector:
             line_invasion_data = self.vehicle.get_line_invasion_data(
@@ -231,6 +242,7 @@ class MainApplication(QMainWindow):
             try:
                 #deviation is the deviation from the center of the road
                 detect_img, deviation = lane_detector.process_lane_detect(self.vehicle.dash_cam_image)
+                self.deviation = deviation
                 direction = "left" if deviation < 0 else "right"
                 self.on_render_laneview(detect_img,
                                         self.vehicle.dash_cam_image.width,
